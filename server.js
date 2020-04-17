@@ -1,33 +1,41 @@
+
 'use strict';
 require('dotenv').config();
+const pg = require('pg');
 const express = require('express');
 const cors = require('cors');
-const pg = require('pg');
-const superagent = require('superagent');
-
+const PORT = process.env.PORT;
 const app = express();
-const PORT = process.env.PORT || 4000;
-const handler = require('./modules/handler.js');
 app.use(cors());
+const client = new pg.Client(process.env.DATABASE_URL);
 
-const locationHandler = require('./modules/locations.js');
+const weatherHandler = require('./modules/weather');
+const locationHandler = require('./modules/locations');
+const movieHandler= require('./modules/movies');
+const trailsHandler = require('./modules/trails');
+const yelpHandler=require('./modules/yelp');
+// const handler = require('./modules/');
 
-app.get('/locations',locationHandler);
+// Route Definitions
+app.get('/weather', weatherHandler);
+app.get('/trails', trailsHandler);
+app.get('/location', locationHandler);
+app.get('/yelp', yelpHandler);
+app.get('/movies', movieHandler);
+// app.use('*', handler);
 
 
+client.on('error', err => {
+  throw new Error(err);
+});
 
-
-
-
-
-
-// function startServer() {
-//   app.listen(PORT, () => console.log(`Server up on ${PORT}`));
-// }
-
-// // Start Up the Server after the database is connected and cache is loaded
-// const client = require('./client.js');
-
-// client.connect()
-//   .then(startServer)
-//   .catch(err => console.error(err));
+client
+  .connect()
+  .then(() => {
+    app.listen(PORT, () =>
+      console.log(`my server is up and running on port ${PORT}`)
+    );
+  })
+  .catch((err) => {
+    throw new Error(`startup error ${err}`);
+  });
